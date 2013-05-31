@@ -20,6 +20,28 @@ namespace HvrMonitor
         {
             try
             {
+                String[] traceParts = FrutiTraceLine.Split(new Char[] { '|' });
+
+                Int16 eventId;
+                DateTime eventTime;
+                ExtractIdAndTime(traceParts[0], out eventId, out eventTime);
+                FrutiTraceObject.EventId = eventId;
+                FrutiTraceObject.EventTime = eventTime;
+            }
+            catch (ArgumentException ex)
+            {
+                // Syntax error in the regular expression.
+                Console.WriteLine("HvrMonitor::ParseTraceLine:",ex.Message);
+            }
+        }
+
+        private static void ExtractIdAndTime(String FrutiTracePart, out Int16 EventId, out DateTime EventTime)
+        {
+            EventId = 0;
+            EventTime = DateTime.UtcNow;
+
+            try
+            {
                 // Regex to extract EventId.
                 String eventIdPattern = @"\[.*EventID:(?<EventId>\d{5})[^|]*\]";
 
@@ -31,18 +53,24 @@ namespace HvrMonitor
 
                 String eventTimePattern = dayPattern + monthPattern + yearPattern + @"\s" + timePattern;
 
-                MatchCollection matchedPart = Regex.Matches(FrutiTraceLine, eventIdPattern);
+                MatchCollection matchedPart = Regex.Matches(FrutiTracePart, eventIdPattern);
                 foreach (Match match in matchedPart)
                 {
-                    Console.WriteLine("EventId: {0}", match.Groups["EventId"].Value);
+                    String eventId = match.Groups["EventId"].Value;
+                    eventId.Trim();
+                    EventId = Convert.ToInt16(eventId);
+                    Console.WriteLine("EventId: {0}", eventId);
 
-                    Console.WriteLine("EventTime: {0}", Regex.Match(match.Value, eventTimePattern).Value);
+                    String eventTime = Regex.Match(match.Value, eventTimePattern).Value;
+                    eventTime.Trim();
+                    DateTime.TryParse(eventTime, out EventTime);
+                    Console.WriteLine("EventTime: {0}", eventTime);
                 }
             }
             catch (ArgumentException ex)
             {
                 // Syntax error in the regular expression.
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("HvrMonitor::ExtractIdAndTime:", ex.Message);
             }
         }
     }
