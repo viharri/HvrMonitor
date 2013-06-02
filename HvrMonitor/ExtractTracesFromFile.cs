@@ -39,6 +39,7 @@ namespace HvrMonitor
         }
         #endregion
 
+        #region Entry Point
         //
         // For console application this is the entry point.
         //
@@ -68,12 +69,13 @@ namespace HvrMonitor
                     Console.WriteLine("The end of the stream has been reached.");
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
                 // Let the user know what went wrong.
                 Console.WriteLine("The file could not be read:");
-                Console.WriteLine(e.Message);
+                Console.WriteLine(ex.Message);
             }
         }
+        #endregion
     }
 }
