@@ -38,10 +38,8 @@ namespace HvrMonitor
 
                 String vmName;
                 Guid vmGuid;
-                ExtractVmNameAndGuid(messageTracePart, out vmName, out vmGuid);
-
                 String traceMessage;
-                ExtractTraceMessage(messageTracePart, out traceMessage);
+                ExtractVmNameAndGuid(messageTracePart, out vmName, out vmGuid, out traceMessage);
 
                 // File fruti trace object with extracted fields.
                 FrutiTraceObject.EventId = eventId;
@@ -55,10 +53,12 @@ namespace HvrMonitor
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
-                Console.WriteLine("HvrMonitor::ParseTraceLine:",ex.Message);
+                Console.WriteLine("HvrMonitor::ParseTraceLine:{0}", ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
+        // TODO: Remove Print Statements From Extraction Methods.
         #region Extraction Methods
         private static void ExtractIdAndTime(String FrutiTracePart, out Int16 EventId, out DateTime EventTime)
         {
@@ -84,18 +84,19 @@ namespace HvrMonitor
                     String eventId = match.Groups["EventId"].Value;
                     eventId.Trim();
                     EventId = Convert.ToInt16(eventId);
-                    Console.WriteLine("EventId: {0}", eventId);
+                    // Console.WriteLine("EventId: {0}", eventId);
 
                     String eventTime = Regex.Match(match.Value, eventTimePattern).Value;
                     eventTime.Trim();
                     DateTime.TryParse(eventTime, out EventTime);
-                    Console.WriteLine("EventTime: {0}", eventTime);
+                    // Console.WriteLine("EventTime: {0}", eventTime);
                 }
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
-                Console.WriteLine("HvrMonitor::ExtractIdAndTime:", ex.Message);
+                Console.WriteLine("HvrMonitor::ExtractIdAndTime:{0}", ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -114,46 +115,48 @@ namespace HvrMonitor
                 {
                     FunctionName = match.Groups["FunctionName"].Value;
                     FunctionName.Trim();
-                    Console.WriteLine("FunctionName: {0}", FunctionName);
+                    // Console.WriteLine("FunctionName: {0}", FunctionName);
 
                     FileName = match.Groups["FileName"].Value;
                     FileName.Trim();
-                    Console.WriteLine("FileName: {0}", FileName);
+                    // Console.WriteLine("FileName: {0}", FileName);
                 }
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
-                Console.WriteLine("HvrMonitor::ExtractFunctionAndFileNames:", ex.Message);
+                Console.WriteLine("HvrMonitor::ExtractFunctionAndFileNames:{0}", ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
-        private static void ExtractVmNameAndGuid(String FrutiTracePart, out String VmName, out Guid VmGuid)
+        private static void ExtractVmNameAndGuid(String FrutiTracePart, out String VmName, out Guid VmGuid, out String TraceMessage)
         {
             VmName = "";
             VmGuid = Guid.Empty;
-
-            try
-            {
-            }
-            catch (Exception ex)
-            {
-                // Syntax error in the regular expression.
-                Console.WriteLine("HvrMonitor::ExtractVmNameAndGuid:", ex.Message);
-            }
-        }
-
-        private static void ExtractTraceMessage(String FrutiTracePart, out String TraceMessage)
-        {
             TraceMessage = "";
 
             try
             {
+                // Regex to extract VmGuid.
+                String hexPattern = @"[0-9a-fA-F]";
+                String vmGuidPattern = System.String.Format("(?<VmGuid>{0}{{8}}-{0}{{4}}-{0}{{4}}-{0}{{4}}-{0}{{12}})", hexPattern);
+
+                String tempGuid = Regex.Match(FrutiTracePart, vmGuidPattern).Groups["VmGuid"].Value;
+                tempGuid.Trim();
+                Guid.TryParse(tempGuid, out VmGuid);
+                // Console.WriteLine("VmGuid: {0}", VmGuid);
+
+                // Not extracting VmName as some of the traces will not have that information.
+                String[] traceParts = FrutiTracePart.Split(new String[] {tempGuid}, StringSplitOptions.None);
+                TraceMessage = traceParts[1].Trim();
+                // Console.WriteLine("TraceMessage: {0}", TraceMessage);
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
-                Console.WriteLine("HvrMonitor::ExtractTraceMessage:", ex.Message);
+                Console.WriteLine("HvrMonitor::ExtractVmNameAndGuid:{0}", ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
         #endregion
@@ -161,8 +164,7 @@ namespace HvrMonitor
         #region Temporary Functionality
         public static void Show(string entries)
         {
-            Console.Write("<{0}>", entries);
-            Console.Write("\n\n");
+            Console.WriteLine("<{0}>", entries);
         }
         #endregion
     }

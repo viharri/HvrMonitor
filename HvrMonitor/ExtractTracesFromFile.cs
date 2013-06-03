@@ -64,6 +64,7 @@ namespace HvrMonitor
                         Console.WriteLine("\n---------------------");
                         Console.WriteLine(input);
                         HvrMonitor.ParseTraceLine(input, ref frutiTraceObject);
+                        frutiTraceObject.PrintTraceObject();
                         Console.WriteLine("---------------------");
                     }
                     Console.WriteLine("The end of the stream has been reached.");
@@ -74,6 +75,7 @@ namespace HvrMonitor
                 // Let the user know what went wrong.
                 Console.WriteLine("The file could not be read:");
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
         #endregion
