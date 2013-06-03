@@ -8,13 +8,42 @@ namespace HvrMonitor
 {
     public class HvrMonitor
     {
-        public static void Main(String[] args)
+        ExtractTracesFromFile fromFileObject;
+        MonitorTracesFromHyperV fromHyperV;
+
+        public HvrMonitor()
         {
-            ExtractTracesFromFile fromFileObject = new ExtractTracesFromFile();
-            fromFileObject.RunTask();
-            Console.ReadLine();
+            fromFileObject = new ExtractTracesFromFile();
+            fromHyperV = new MonitorTracesFromHyperV();
         }
 
+        #region Entry Point
+        // Entry Point for HvrMonitor
+        public void TracesFromFileRunTask(String[] args)
+        {
+            String fileName;
+            try
+            {
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("Enter the name of the file:");
+                    fileName = Console.ReadLine();
+                }
+                else
+                {
+                    fileName = args[0];
+                }
+                fromFileObject.RunTask(fileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("HvrMonitor::TracesFromFileRunTask: {0}", ex.Message);
+                Console.WriteLine("StackTrace: \n{0}", ex.StackTrace);
+            }
+        }
+        #endregion
+
+        #region Parser Code
         // Parses a fruti trace line into an trace object.
         public static void ParseTraceLine(String FrutiTraceLine, ref TraceObject FrutiTraceObject)
         {
@@ -54,7 +83,7 @@ namespace HvrMonitor
             {
                 // Syntax error in the regular expression.
                 Console.WriteLine("HvrMonitor::ParseTraceLine:{0}", ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("StackTrace: \n{0}", ex.StackTrace);
             }
         }
 
@@ -84,19 +113,17 @@ namespace HvrMonitor
                     String eventId = match.Groups["EventId"].Value;
                     eventId.Trim();
                     EventId = Convert.ToInt16(eventId);
-                    // Console.WriteLine("EventId: {0}", eventId);
 
                     String eventTime = Regex.Match(match.Value, eventTimePattern).Value;
                     eventTime.Trim();
                     DateTime.TryParse(eventTime, out EventTime);
-                    // Console.WriteLine("EventTime: {0}", eventTime);
                 }
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
                 Console.WriteLine("HvrMonitor::ExtractIdAndTime:{0}", ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("StackTrace: \n{0}", ex.StackTrace);
             }
         }
 
@@ -108,25 +135,23 @@ namespace HvrMonitor
             try
             {
                 // Regex to extract function and file names.
-                String functionAndFileNamesPattern = @"\[(?<FunctionName>\w+::\w+)\s\((?<FileName>.+)\)\]";
+                String functionAndFileNamesPattern = @"\[(?<FunctionName>\w+::[~\w]+)\s\((?<FileName>.+)\)\]";
 
                 MatchCollection matchedPart = Regex.Matches(FrutiTracePart, functionAndFileNamesPattern);
                 foreach (Match match in matchedPart)
                 {
                     FunctionName = match.Groups["FunctionName"].Value;
                     FunctionName.Trim();
-                    // Console.WriteLine("FunctionName: {0}", FunctionName);
 
                     FileName = match.Groups["FileName"].Value;
                     FileName.Trim();
-                    // Console.WriteLine("FileName: {0}", FileName);
                 }
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
                 Console.WriteLine("HvrMonitor::ExtractFunctionAndFileNames:{0}", ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("StackTrace: \n{0}", ex.StackTrace);
             }
         }
 
@@ -134,7 +159,7 @@ namespace HvrMonitor
         {
             VmName = "";
             VmGuid = Guid.Empty;
-            TraceMessage = "";
+            TraceMessage = FrutiTracePart;
 
             try
             {
@@ -145,20 +170,23 @@ namespace HvrMonitor
                 String tempGuid = Regex.Match(FrutiTracePart, vmGuidPattern).Groups["VmGuid"].Value;
                 tempGuid.Trim();
                 Guid.TryParse(tempGuid, out VmGuid);
-                // Console.WriteLine("VmGuid: {0}", VmGuid);
 
                 // Not extracting VmName as some of the traces will not have that information.
                 String[] traceParts = FrutiTracePart.Split(new String[] {tempGuid}, StringSplitOptions.None);
-                TraceMessage = traceParts[1].Trim();
-                // Console.WriteLine("TraceMessage: {0}", TraceMessage);
+                if (!VmGuid.Equals(Guid.Empty))
+                {
+                    // If VmGuid is NULL, it means there is GUID and entire TracePart is a Message.
+                    TraceMessage = traceParts[1].Trim();
+                }
             }
             catch (Exception ex)
             {
                 // Syntax error in the regular expression.
                 Console.WriteLine("HvrMonitor::ExtractVmNameAndGuid:{0}", ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("StackTrace: \n{0}", ex.StackTrace);
             }
         }
+        #endregion
         #endregion
 
         #region Temporary Functionality
