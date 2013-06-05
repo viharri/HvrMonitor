@@ -8,13 +8,13 @@ namespace HvrMonitor
 {
     public class HvrMonitor
     {
-        ExtractTracesFromFile fromFileObject;
-        MonitorTracesFromHyperV fromHyperV;
+        HvrTraceExtractor fromFileObject;
+        HvrTraceMonitor fromHyperV;
 
         public HvrMonitor()
         {
-            fromFileObject = new ExtractTracesFromFile();
-            fromHyperV = new MonitorTracesFromHyperV();
+            fromFileObject = new HvrTraceExtractor();
+            fromHyperV = new HvrTraceMonitor();
         }
 
         #region Entry Point

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HvrMonitor
 {
-    class MonitorTracesFromHyperV
+    class HvrTraceFilter
     {
     }
 }

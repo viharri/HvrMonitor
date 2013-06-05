@@ -6,7 +6,7 @@ using System.IO;
 
 namespace HvrMonitor
 {
-    public class ExtractTracesFromFile
+    public class HvrTraceExtractor
     {
         static Int16 m_maxNumberOfInstance = 5;   // To keep limit on the number of parallel threads that can be allowed.
 

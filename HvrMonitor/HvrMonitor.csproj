@@ -43,10 +43,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExtractTracesFromFile.cs" />
+    <Compile Include="HvrTraceExtractor.cs" />
     <Compile Include="HvrMonitor.cs" />
     <Compile Include="HvrMonitorEntryPoint.cs" />
-    <Compile Include="MonitorTracesFromHyperV.cs" />
+    <Compile Include="HvrTraceFilter.cs" />
+    <Compile Include="HvrTraceMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TraceObject.cs" />
   </ItemGroup>
